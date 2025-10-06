@@ -22,6 +22,8 @@ if (shouldLoadCopilot) {
     
     if (!isAuthorized) {
         console.error('Authentication failed');
+    }else{
+        console.log('Authentication successful');
     }
     
     // Initialize copilot when DOM is ready
