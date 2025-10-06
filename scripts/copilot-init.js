@@ -10,21 +10,44 @@ if (shouldLoadCopilot) {
       ? "https://demo-system-zoltar-demo-pilot-deploy-ethos101-prod-23e40d.cloud.adobe.io"
       : "https://demo-system-zoltar-demo-pilot-deploy-ethos101-stag-6229b6.stage.cloud.adobe.io";
 
-    //post call to demoPilotDomain/auth with ims_token as body
-    const response = await fetch(`${demoPilotDomain}/auth`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ "accessToken": window.location.search.split("ims_token=")[1] }),
-    });
-    const isAuthorized = await response.json() && response.isAuthorized === "true";
-    
-    if (!isAuthorized) {
-        console.error('Authentication failed');
-    }else{
-        console.log('Authentication successful');
-    }
+    // Authenticate with demo pilot domain
+    (async () => {
+        try {
+            const imsToken = window.location.search.split("ims_token=")[1];
+            
+            if (!imsToken) {
+                console.warn('No IMS token found in URL');
+                return;
+            }
+
+            const response = await fetch(`${demoPilotDomain}/auth`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ "accessToken": imsToken }),
+            });
+
+            // Wait for 2 seconds after the call
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            if (!response.ok) {
+                console.error(`Authentication request failed with status: ${response.status}`);
+                return;
+            }
+
+            const data = await response.json();
+            const isAuthorized = data?.isAuthorized === "true" || data?.isAuthorized === true;
+            
+            if (!isAuthorized) {
+                console.error('Authentication failed: User not authorized');
+            } else {
+                console.log('Authentication successful');
+            }
+        } catch (error) {
+            console.error('Authentication error:', error);
+        }
+    })();
     
     // Initialize copilot when DOM is ready
     document.addEventListener('DOMContentLoaded', async () => {
