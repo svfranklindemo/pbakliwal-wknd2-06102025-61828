@@ -1,8 +1,29 @@
 // Check if copilot parameter exists in URL
 const urlParams = new URLSearchParams(window.location.search);
 const shouldLoadCopilot = urlParams.has('copilotEditor') || urlParams.has('copilotPreview');
- 
+
 if (shouldLoadCopilot) {
+
+    let demoPilotDomain = "https://demo-system-zoltar-demo-pilot-deploy-ethos101-stag-6229b6.stage.cloud.adobe.io";
+    demoPilotDomain =
+    urlParams.get("copilot-prod") === "1"
+      ? "https://demo-system-zoltar-demo-pilot-deploy-ethos101-prod-23e40d.cloud.adobe.io"
+      : "https://demo-system-zoltar-demo-pilot-deploy-ethos101-stag-6229b6.stage.cloud.adobe.io";
+
+    //post call to demoPilotDomain/auth with ims_token as body
+    const response = await fetch(`${demoPilotDomain}/auth`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ "accessToken": window.location.search.split("ims_token=")[1] }),
+    });
+    const isAuthorized = await response.json() && response.isAuthorized === "true";
+    
+    if (!isAuthorized) {
+        console.error('Authentication failed');
+    }
+    
     // Initialize copilot when DOM is ready
     document.addEventListener('DOMContentLoaded', async () => {
         console.log('Initializing New copilot...');
